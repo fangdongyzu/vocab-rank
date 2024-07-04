@@ -11,7 +11,14 @@
 <body>
     <div class="container">
         <h1>Text Segmentation and Lookup</h1>
-        <textarea id="textInput" placeholder="Enter text here..."></textarea>
+        <textarea id="textInput" placeholder="Enter text here...">
+            喜歡
+            我
+            破
+            茶
+            俗話
+            秋
+            烏龍茶</textarea>
         <button onclick="doSegmentAndLookup()">Segment & Lookup</button>
         <!---
         <h3>Segment</h3>
@@ -19,6 +26,7 @@
         -->
 
         <h3>Lookup Result</h3>
+        <button onclick="doDisplaySorted()" id="sort-button">Sort</button>
         <div id="lookup-result"></div>
     </div>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>

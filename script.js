@@ -1,5 +1,5 @@
 let _custom_dict = [];  // Declare _custom_dict as an array
-
+let resultObject = {}
 // Fetch custom dictionary file
 fetch("userdict.txt")
     .then(response => {
@@ -48,7 +48,7 @@ function jiebaSegment(inPut, callback) {
         // Example usage with jieba-js after setup
         call_jieba_cut(inPut, _custom_dict, function (_result) {
             if (callback) {
-                callback(_result); // Pass _result to the callback function
+                callback(_result); // Pass _result to the callback function           
             }
         });
     };
@@ -80,65 +80,107 @@ function doSegmentAndLookup() {
         init(_result)
     });
 
+}
 
+async function fetchCSV(url) {
+    const response = await fetch(url);
+    const data = await response.text();
+    return data;
+}
 
-    async function fetchCSV(url) {
-        const response = await fetch(url);
-        const data = await response.text();
-        return data;
-    }
+function parseCSV(data) {
+    const lines = data.trim().split('\n');
+    const headers = lines[0].split(',');
 
-    function parseCSV(data) {
-        const lines = data.trim().split('\n');
-        const headers = lines[0].split(',');
+    const result = [];
+    for (let i = 1; i < lines.length; i++) {
+        const currentline = lines[i].split(',');
 
-        const result = [];
-        for (let i = 1; i < lines.length; i++) {
-            const currentline = lines[i].split(',');
+        // Skip empty lines or lines that don't have the same number of elements as headers
+        if (currentline.length !== headers.length) continue;
 
-            // Skip empty lines or lines that don't have the same number of elements as headers
-            if (currentline.length !== headers.length) continue;
-
-            const obj = {};
-            for (let j = 0; j < headers.length; j++) {
-                obj[headers[j].trim()] = currentline[j].trim();
-            }
-            result.push(obj);
+        const obj = {};
+        for (let j = 0; j < headers.length; j++) {
+            obj[headers[j].trim()] = currentline[j].trim();
         }
-        return result;
+        result.push(obj);
     }
+    return result;
+}
 
-    function checkVocab(words, vocabList) {
-        const result = {};
-        words.forEach(word => {
-            const vocab = vocabList.find(v => v['生詞'] === word);
-            if (vocab) {
-                result[word] = { 冊: vocab['冊'], '課-序號': vocab['課-序號'] };
-            } else {
-                result[word] = { 冊: 'N/A', '課-序號': 'N/A' };
-            }
-        });
-        return result;
-    }
-
-    function displayResult(result) {
-        const resultDiv = document.getElementById('lookup-result');
-        resultDiv.innerHTML = ''; // Clear previous results
-
-        for (const [word, info] of Object.entries(result)) {
-            const p = document.createElement('p');
-            p.textContent = `${word}: 冊 ${info['冊']}, 課-序號 ${info['課-序號']}`;
-            resultDiv.appendChild(p);
+function checkVocab(words, vocabList) {
+    const result = {};
+    words.forEach(word => {
+        const vocab = vocabList.find(v => v['生詞'] === word);
+        if (vocab) {
+            result[word] = { 冊: vocab['冊'], '課-序號': vocab['課-序號'] };
+        } else {
+            result[word] = { 冊: 'N/A', '課-序號': 'N/A' };
         }
-    }
+    });
+    return result;
+}
 
-    async function init(words) {
+function displayResult(result) {
+    const resultDiv = document.getElementById('lookup-result');
+    resultDiv.innerHTML = ''; // Clear previous results
 
-        const csvData = await fetchCSV('all_vocabs.csv');
-        const vocabList = parseCSV(csvData);
-        const result = checkVocab(words, vocabList);
-        displayResult(result);
+    for (const [word, info] of Object.entries(result)) {
+        const p = document.createElement('p');
+        p.textContent = `${word}: 冊 ${info['冊']}, 課-序號 ${info['課-序號']}`;
+        resultDiv.appendChild(p);
     }
+}
+
+async function init(words) {
+
+    const csvData = await fetchCSV('all_vocabs.csv');
+    const vocabList = parseCSV(csvData);
+    const result = checkVocab(words, vocabList);
+    resultObject = result
+    displayResult(result);
 
 }
+
+function sortResults(result) {
+    return Object.entries(result).sort((a, b) => {
+        const [aWord, aInfo] = a;
+        const [bWord, bInfo] = b;
+
+        if (aInfo['冊'] !== bInfo['冊']) {
+            return aInfo['冊'] - bInfo['冊'];
+        }
+
+        return aInfo['課-序號'] - bInfo['課-序號'];
+    });
+}
+
+
+
+function displaySorted(result) {
+    //console.log('Hello displaySortedRunned')
+    const resultDiv = document.getElementById('lookup-result');
+    resultDiv.innerHTML = ''; // Clear previous results
+
+    // Sort the results before displaying
+    const sortedResults = sortResults(result);
+    for (const [word, info] of sortedResults) {
+        const p = document.createElement('p');
+        p.textContent = `${word}: 冊 ${info['冊']}, 課-序號 ${info['課-序號']}`;
+        resultDiv.appendChild(p);
+    }
+}
+
+
+
+
+function doDisplaySorted() {
+    console.log('Do Sorted Runned')
+    displaySorted(resultObject)
+}
+
+
+
+
+
 
