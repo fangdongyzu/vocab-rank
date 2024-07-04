@@ -147,13 +147,33 @@ function sortResults(result) {
         const [aWord, aInfo] = a;
         const [bWord, bInfo] = b;
 
+        // Handle N/A values for 冊
+        if (aInfo['冊'] === 'N/A' && bInfo['冊'] !== 'N/A') return 1;
+        if (aInfo['冊'] !== 'N/A' && bInfo['冊'] === 'N/A') return -1;
+        if (aInfo['冊'] === 'N/A' && bInfo['冊'] === 'N/A') return 0;
+
+        // Compare 冊 first
         if (aInfo['冊'] !== bInfo['冊']) {
             return aInfo['冊'] - bInfo['冊'];
         }
 
-        return aInfo['課-序號'] - bInfo['課-序號'];
+        // Handle N/A values for 課-序號
+        if (aInfo['課-序號'] === 'N/A' && bInfo['課-序號'] !== 'N/A') return 1;
+        if (aInfo['課-序號'] !== 'N/A' && bInfo['課-序號'] === 'N/A') return -1;
+        if (aInfo['課-序號'] === 'N/A' && bInfo['課-序號'] === 'N/A') return 0;
+
+        // Split and compare 課-序號
+        const [aLesson, aSeq] = aInfo['課-序號'].split('-').map(Number);
+        const [bLesson, bSeq] = bInfo['課-序號'].split('-').map(Number);
+
+        if (aLesson !== bLesson) {
+            return aLesson - bLesson;
+        }
+
+        return aSeq - bSeq;
     });
 }
+
 
 
 
